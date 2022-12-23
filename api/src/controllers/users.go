@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"go-devbook-api/src/auth"
 	"go-devbook-api/src/db"
 	"go-devbook-api/src/models"
 	"go-devbook-api/src/repositories"
@@ -88,6 +89,23 @@ func FindUserById(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	userID, err := strconv.ParseUint(params["id"], 10, 64)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	ut, err := auth.ExtractUserID(r)
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	if userID != ut {
+		response.Error(w, http.StatusForbidden, errors.New("user has no permission to update"))
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		response.Error(w, http.StatusUnprocessableEntity, err)
@@ -106,7 +124,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer db.Close()
-
+	u.ID = userID
 	err = repositories.NewUsersRepository(db).Update(u)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err)
@@ -117,8 +135,22 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
+	id, err := strconv.ParseUint(params["id"], 10, 64)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err)
+		return
+	}
 
-	id, err := strconv.ParseInt(params["id"], 10, 64)
+	ut, err := auth.ExtractUserID(r)
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, err)
+		return
+	}
+
+	if id != ut {
+		response.Error(w, http.StatusForbidden, errors.New("user has no permission to delete"))
+		return
+	}
 
 	db, err := db.Connection()
 	if err != nil {

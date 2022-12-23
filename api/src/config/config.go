@@ -12,6 +12,7 @@ import (
 var (
 	UriConection = ""
 	Port         = 0
+	SecretKey    []byte
 )
 
 type Config struct {
@@ -28,6 +29,8 @@ func Load() Config {
 	if err != nil {
 		Port = 9000
 	}
+
+	SecretKey = []byte(os.Getenv("SECRET_KEY"))
 
 	UriConection = fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=True",
 		os.Getenv("DB_USER"),

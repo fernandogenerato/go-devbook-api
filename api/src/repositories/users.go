@@ -104,7 +104,7 @@ func (u Users) Update(user models.User) error {
 	return nil
 }
 
-func (u Users) DeleteUser(id int64) error {
+func (u Users) DeleteUser(id uint64) error {
 	st, err := u.db.Prepare("delete from users where id = ?")
 	if err != nil {
 		return err

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"go-devbook-api/src/middlewares"
 )
 
 type Route struct {
@@ -17,7 +18,12 @@ func Config(r *mux.Router) *mux.Router {
 	routes := userRoutes
 	routes = append(routes, loginRoute)
 	for _, route := range routes {
-		r.HandleFunc(route.URI, route.Function).Methods(route.Method)
+
+		if route.Authentication {
+			r.HandleFunc(route.URI, middlewares.Logger(middlewares.DoAuth(route.Function))).Methods(route.Method)
+		} else {
+			r.HandleFunc(route.URI, middlewares.Logger(route.Function)).Methods(route.Method)
+		}
 	}
 	return r
 }
